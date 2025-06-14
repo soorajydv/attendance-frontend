@@ -1,18 +1,15 @@
 import type { AuthState, LoginFormData, SignupFormData, User } from "@/types"
-import { BACKEND_URL } from "@/configs/api.config"
-import axios from "axios"
+import { Api } from "@/configs/api.config"
 
 export const authService = {
   login: async (credentials: LoginFormData) => {
-    const response = await axios.post(`${BACKEND_URL}/auth/login`, credentials)
-    return response.data // assumes response contains { user, token }
+    const response = await Api.post(`/auth/login`, credentials)
+    return response.data.data;
   },
 
   signup: async (userData: SignupFormData) => {
-    const response = await axios.post(`${BACKEND_URL}/auth/signup`, userData)
-    console.log("response",response);
-    
-    return response.data
+    const response = await Api.post(`/auth/signup`, userData)
+    return response.data.data
   },
 
   logout: async () => {

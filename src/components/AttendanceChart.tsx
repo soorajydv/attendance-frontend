@@ -1,15 +1,7 @@
-"use client";
-import Image from "next/image";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+"use client"
+
+import Image from "next/image"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 
 const data = [
   {
@@ -37,11 +29,11 @@ const data = [
     present: 65,
     absent: 55,
   },
-];
+]
 
-const AttendanceChart = () => {
+export function AttendanceChart() {
   return (
-    <div className="bg-white rounded-lg p-4 h-full mt-5">
+    <div className="bg-white rounded-lg p-4 h-full">
       <div className="flex justify-between items-center">
         <h1 className="text-lg font-semibold">Attendance</h1>
         <Image src="/moreDark.png" alt="" width={20} height={20} />
@@ -49,37 +41,14 @@ const AttendanceChart = () => {
       <ResponsiveContainer width="100%" height="90%">
         <BarChart width={500} height={300} data={data} barSize={20}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ddd" />
-          <XAxis
-            dataKey="name"
-            axisLine={false}
-            tick={{ fill: "blue" }}
-            tickLine={false}
-          />
-          <YAxis axisLine={false} tick={{ fill: "skyblue" }} tickLine={false} />
-          <Tooltip
-            contentStyle={{ borderRadius: "10px", borderColor: "lightgray" }}
-          />
-          <Legend
-            align="left"
-            verticalAlign="top"
-            wrapperStyle={{ paddingTop: "20px", paddingBottom: "40px" }}
-          />
-          <Bar
-            dataKey="present"
-            fill="blue"
-            legendType="circle"
-            radius={[10, 10, 0, 0]}
-          />
-          <Bar
-            dataKey="absent"
-            fill="red"
-            legendType="circle"
-            radius={[10, 10, 0, 0]}
-          />
+          <XAxis dataKey="name" axisLine={false} tick={{ fill: "#3b82f6" }} tickLine={false} />
+          <YAxis axisLine={false} tick={{ fill: "#64748b" }} tickLine={false} />
+          <Tooltip contentStyle={{ borderRadius: "10px", borderColor: "lightgray" }} />
+          <Legend align="left" verticalAlign="top" wrapperStyle={{ paddingTop: "20px", paddingBottom: "40px" }} />
+          <Bar dataKey="present" fill="#3b82f6" legendType="circle" radius={[10, 10, 0, 0]} />
+          <Bar dataKey="absent" fill="#ef4444" legendType="circle" radius={[10, 10, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
-  );
-};
-
-export default AttendanceChart;
+  )
+}

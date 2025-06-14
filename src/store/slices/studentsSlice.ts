@@ -42,7 +42,7 @@ export const fetchStudents = createAsyncThunk(
 
 export const fetchStudentById = createAsyncThunk(
   "students/fetchStudentById",
-  async (id: number, { rejectWithValue }) => {
+  async (id: string, { rejectWithValue }) => {
     try {
       const response = await studentsService.getStudentById(id)
       return response
@@ -66,7 +66,7 @@ export const createStudent = createAsyncThunk(
 
 export const updateStudent = createAsyncThunk(
   "students/updateStudent",
-  async ({ id, data }: { id: number; data: Partial<Student> }, { rejectWithValue }) => {
+  async ({ id, data }: { id: string; data: Partial<Student> }, { rejectWithValue }) => {
     try {
       const response = await studentsService.updateStudent(id, data)
       return response
@@ -76,7 +76,7 @@ export const updateStudent = createAsyncThunk(
   },
 )
 
-export const deleteStudent = createAsyncThunk("students/deleteStudent", async (id: number, { rejectWithValue }) => {
+export const deleteStudent = createAsyncThunk("students/deleteStudent", async (id: string, { rejectWithValue }) => {
   try {
     await studentsService.deleteStudent(id)
     return id
@@ -92,20 +92,20 @@ const studentsSlice = createSlice({
     clearError: (state) => {
       state.error = null
     },
-    setCurrentStudent: (state, action: PayloadAction<Student | null>) => {
+    setCurrentStudent: (state, action) => {
       state.currentStudent = action.payload
     },
   },
   extraReducers: (builder) => {
+    
     builder
-      // Fetch students
       .addCase(fetchStudents.pending, (state) => {
         state.isLoading = true
         state.error = null
       })
       .addCase(fetchStudents.fulfilled, (state, action) => {
         state.isLoading = false
-        state.students = action.payload.data
+        state.students = action.payload.students
         state.pagination = {
           page: action.payload.page,
           limit: action.payload.limit,

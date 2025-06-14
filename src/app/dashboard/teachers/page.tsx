@@ -1,34 +1,52 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { useAppDispatch, useAppSelector } from "@/hooks"
-import { TeachersList } from "@/features/teachers/components/TeachersList"
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
-import { fetchTeachers } from "@/store/slices/teachersSlice"
-import { useToast } from "@/components/providers/ToastProvider"
+import { useEffect, useState, useTransition } from "react";
+import { useAppDispatch, useAppSelector } from "@/hooks";
+import { TeachersList } from "@/components/TeachersList";
+import { fetchTeachers } from "@/store/slices/teachersSlice";
+import { useToast } from "@/components/providers/ToastProvider";
+import Spinner from "@/components/Spinner";
 
 export default function TeachersPage() {
-  const toast = useToast()
-  const dispatch = useAppDispatch()
-  const { teachers, isLoading, error, pagination } = useAppSelector((state) => state.teachers)
+  const toast = useToast();
+  const dispatch = useAppDispatch();
+  const { teachers, error, pagination } = useAppSelector((state) => state.teachers);
+  const [search, setSearch] = useState("");
+  const [isLoading, startTransition] = useTransition();
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
-    dispatch(fetchTeachers({ page: 1, limit: 10, search: "" }))
-  }, [dispatch]) // run only on mount
+    startTransition(() => {
+      dispatch(fetchTeachers({ page: 1, limit: 10, search: "", gender: "" }));
+    });
+  }, [dispatch]);
 
+    useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      dispatch(fetchTeachers({ page: 1, limit: 10, search, gender: "" }));
+    }, 500); // debounce
+
+    return () => clearTimeout(delayDebounce);
+  }, [search, dispatch]);
+  
   useEffect(() => {
     if (error) {
-      toast.current.show({ severity: "error", detail: error })
+      toast.current.show({ severity: "error", detail: error });
     }
-  }, [error, toast])
+  }, [error, toast]);
 
-  if (isLoading) {
-    return <LoadingSpinner />
-  }
+  if (isLoading) return <Spinner />;
 
   return (
     <div className="p-4">
-      {/* <TeachersList teachers={teachers} pagination={pagination} /> */}
+      {teachers ? (
+        <TeachersList teachers={teachers} pagination={pagination} setSearch={setSearch} 
+        refetchTeacher={() =>
+          dispatch(fetchTeachers({ page: 1, limit: 10, search: "", gender: "" }))
+        } />
+      ) : (
+        <p>No data available</p>
+      )}
     </div>
-  )
+  );
 }

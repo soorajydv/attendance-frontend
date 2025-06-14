@@ -1,71 +1,87 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react";
+import React, { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useAppDispatch, useAppSelector } from "@/hooks";
-import { loginUser } from "@/store/slices/authSlice";
+import { useAppDispatch } from "@/hooks";
+import { loginUser, setUser } from "@/store/slices/authSlice";
 import { ROUTES } from "@/constants";
 import type { LoginFormData } from "@/types";
 import { useToast } from "@/components/providers/ToastProvider";
 import { setCookie } from "@/utils/cookies.utils";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function LoginPage() {
   const [isSignup, setIsSignup] = useState(false);
   const [formData, setFormData] = useState<LoginFormData>({
-    email: "soorajydv9@gmail.com",
+    email: "admin@gmail.com",
     password: "Password@123",
   });
 
+  const [isPending, startTransition] = useTransition();
   const dispatch = useAppDispatch();
-  const { isLoading } = useAppSelector((state) => state.auth);
-
   const router = useRouter();
   const toast = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const result = await dispatch(loginUser(formData)).unwrap();
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData((prev) => ({
+        ...prev,
+        [e.target.name]: e.target.value,
+      }));
+    },
+    []
+  );
 
-      if (result.success) {
-        const { role } = result.data.user;
-        const accessToken = result.data.accessToken;
+  const handleSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
 
-        setCookie("accessToken", accessToken); // save token in cookie
-        localStorage.setItem("accessToken",accessToken)   // save refresh token - TODO
+      startTransition(async () => {
+        try {
+          const result = await dispatch(loginUser(formData)).unwrap();
+          if (result.accessToken) {
+            const { user, accessToken } = result;
+            dispatch(setUser(user));
 
-        switch (role) {
-          case "SU":
-            router.push(ROUTES.DASHBOARD);
-            break;
-          case "TEACHER":
-            router.push(ROUTES.TEACHERS);
-            break;
-          case "STUDENT":
-            router.push(ROUTES.STUDENTS);
-            break;
-          default:
-            toast.current.show({ severity: "error", summary: "Invalid Role" });
+            setCookie("accessToken", accessToken);
+            localStorage.setItem("accessToken", accessToken); // Optional
+
+            toast.current.show({
+              severity: "success",
+              summary: "Login successful",
+              life: 3000,
+            });
+
+            const routeByRole:any = {
+              ADMIN: ROUTES.DASHBOARD,
+              TEACHER: ROUTES.TEACHERS,
+              STUDENT: ROUTES.STUDENTS,
+            };
+
+            const redirectPath = routeByRole[user.role];
+            if (redirectPath) {
+              router.push(redirectPath);
+            } else {
+              toast.current.show({
+                severity: "error",
+                summary: "Invalid Role",
+              });
+            }
+          }
+        } catch (error) {
+          toast.current.show({
+            severity: "error",
+            summary: "Login Failed",
+            detail: String(error),
+            life: 3000,
+          });
         }
-      }
-    } catch (error) {
-      toast.current.show({
-        severity: "error",
-        summary: "Login Failed",
-        detail: String(error),
-        life: 3000,
       });
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+    },
+    [formData, dispatch, router, toast]
+  );
 
   return (
-    <div className="min-h-screen w-full grid place-items-center bg-gradient-to-r from-[#4985c2] via-[#87b1db] to-[#4985c2] p-4">
+    <div className="min-h-screen w-full grid place-items-center bg-gradient-to-r from-[#ffffff] via-[#f7f7f7] to-[#eceff3] p-4">
       <div className="bg-white max-w-md w-full p-8 rounded-2xl shadow-xl overflow-hidden">
         <div className="flex w-full transition-all duration-500 mb-4">
           <h2 className="w-full text-center text-2xl font-semibold text-[#1a75ff]">
@@ -73,24 +89,30 @@ export default function LoginPage() {
           </h2>
         </div>
 
+        {/* Toggle Login/Signup Switch */}
         <div className="relative flex justify-between items-center h-12 border border-gray-300 rounded-xl mb-6">
           <button
+            type="button"
             onClick={() => setIsSignup(false)}
-            className={`w-1/2 h-full text-center z-10 font-medium ${!isSignup ? "text-white" : "text-black"
-              }`}
+            className={`w-1/2 h-full text-center z-10 font-medium ${
+              !isSignup ? "text-white" : "text-black"
+            }`}
           >
             Login
           </button>
           <button
+            type="button"
             onClick={() => setIsSignup(true)}
-            className={`w-1/2 h-full text-center z-10 font-medium ${isSignup ? "text-white" : "text-black"
-              }`}
+            className={`w-1/2 h-full text-center z-10 font-medium ${
+              isSignup ? "text-white" : "text-black"
+            }`}
           >
             Signup
           </button>
           <div
-            className={`absolute top-0 h-full w-1/2 bg-gradient-to-r from-[#003366] via-[#0059b3] to-[#0073e6] rounded-xl transition-all duration-500 ${isSignup ? "left-1/2" : "left-0"
-              }`}
+            className={`absolute top-0 h-full w-1/2 bg-gradient-to-r from-[#003366] via-[#0059b3] to-[#0073e6] rounded-xl transition-all duration-500 ${
+              isSignup ? "left-1/2" : "left-0"
+            }`}
           />
         </div>
 
@@ -106,6 +128,7 @@ export default function LoginPage() {
               className="w-full h-12 px-4 rounded-xl border border-gray-300 focus:border-[#1a75ff] focus:outline-none"
             />
           </div>
+
           <div className="mt-5">
             <input
               type="password"
@@ -126,13 +149,33 @@ export default function LoginPage() {
             </div>
           )}
 
-          <div className="mt-6 relative group">
+          <div className="mt-6">
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full h-12 bg-gradient-to-r from-[#003366] via-[#0059b3] to-[#0073e6] text-white font-medium cursor-pointer rounded-xl disabled:opacity-50 flex items-center justify-center"
+              disabled={isPending}
+              className="w-full h-12 bg-gradient-to-r from-[#003366] via-[#0059b3] to-[#0073e6] text-white font-medium rounded-xl flex items-center justify-center disabled:opacity-50"
             >
-              {isLoading ? <LoadingSpinner /> : isSignup ? "Signup" : "Login"}
+              {isPending ? (
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                    fill="none"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  />
+                </svg>
+              ) : isSignup ? "Signup" : "Login"}
             </button>
           </div>
 
@@ -149,8 +192,8 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center text-sm text-gray-500">
             <p>Demo credentials (pre-filled):</p>
-            <p>Email: admin@school.com</p>
-            <p>Password: password</p>
+            <p>Email: admin@gmail.com</p>
+            <p>Password: Password@123</p>
           </div>
         </form>
       </div>

@@ -1,40 +1,53 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { useAppDispatch, useAppSelector } from "@/hooks"
-import { StudentsList } from "@/features/students/components/StudentsList"
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner"
-import { ErrorMessage } from "@/components/ui/ErrorMessage"
-import { mockStudents } from "@/lib/mockData"
+import { useEffect, useState, useTransition } from "react";
+import { useAppDispatch, useAppSelector } from "@/hooks";
+import { StudentsList } from "@/components/StudentsList";
+import Spinner from "@/components/Spinner";
+import { fetchStudents } from "@/store/slices/studentsSlice";
+import { useToast } from "@/components/providers/ToastProvider";
 
 export default function StudentsPage() {
-  const dispatch = useAppDispatch()
-  const { students, isLoading, error, pagination } = useAppSelector((state) => state.students)
+  const dispatch = useAppDispatch();
+  const [isLoading, startTransition] = useTransition();
+
+  const { students, error, pagination } = useAppSelector((state) => state.students);
+  const toast = useToast();
+  const [search, setSearch] = useState(""); // user-controlled value
 
   useEffect(() => {
-    // For now, we'll use mock data since we don't have a backend
-    // dispatch(fetchStudents({ page: 1, limit: 10 }))
-  }, [dispatch])
+    startTransition(() => {
+      dispatch(fetchStudents({ page: 1, limit: 10 }));
+    });
+  }, [dispatch]);
 
-  // Use mock data for now
-  const mockPagination = {
-    page: 1,
-    limit: 10,
-    total: mockStudents.length,
-    totalPages: Math.ceil(mockStudents.length / 10),
-  }
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      dispatch(fetchStudents({ page: 1, limit: 10, search }));
+    }, 500); // debounce
 
-  if (isLoading) {
-    return <LoadingSpinner />
-  }
+    return () => clearTimeout(delayDebounce);
+  }, [search, dispatch]);
 
-  if (error) {
-    return <ErrorMessage message={error} />
-  }
+  useEffect(() => {
+    if (error) {
+      toast.current.show({ severity: "error", detail: error });
+    }
+  }, [error, toast]);
+
+  if (isLoading) return <Spinner />;
 
   return (
     <div className="p-4">
-      <StudentsList students={mockStudents} pagination={mockPagination} />
+      {students ? (
+        <StudentsList
+          students={students}
+          pagination={pagination}
+          setSearch={setSearch}
+        />
+      ) : (
+        <p>No data available</p>
+      )}
     </div>
-  )
+  );
 }

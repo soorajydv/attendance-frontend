@@ -1,38 +1,37 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import { useState } from "react";
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import Image from "next/image"
+import { useState } from "react"
+import Calendar from "react-calendar"
+import "react-calendar/dist/Calendar.css"
 
-type ValuePiece = Date | null;
-
-type Value = ValuePiece | [ValuePiece, ValuePiece];
+type ValuePiece = Date | null
+type Value = ValuePiece | [ValuePiece, ValuePiece]
 
 // TEMPORARY
 const events = [
   {
     id: 1,
-    title: "Lorem ipsum dolor",
-    time: "12:00 PM - 2:00 PM",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    title: "Math Exam",
+    time: "10:00 AM - 12:00 PM",
+    description: "Final mathematics examination for grade 10.",
   },
   {
     id: 2,
-    title: "Lorem ipsum dolor",
-    time: "12:00 PM - 2:00 PM",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    title: "Science Fair",
+    time: "2:00 PM - 4:00 PM",
+    description: "Annual science fair presentation.",
   },
   {
     id: 3,
-    title: "Lorem ipsum dolor",
-    time: "12:00 PM - 2:00 PM",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+    title: "Parent Meeting",
+    time: "6:00 PM - 8:00 PM",
+    description: "Monthly parent-teacher meeting.",
   },
-];
+]
 
-const EventCalendar = () => {
-  const [value, onChange] = useState<Value>(new Date());
+export function EventCalendar() {
+  const [value, onChange] = useState<Value>(new Date())
 
   return (
     <div className="bg-white p-4 rounded-md">
@@ -56,7 +55,5 @@ const EventCalendar = () => {
         ))}
       </div>
     </div>
-  );
-};
-
-export default EventCalendar;
+  )
+}

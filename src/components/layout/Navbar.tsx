@@ -9,7 +9,7 @@ import { ROUTES } from "@/constants"
 export function Navbar() {
   const dispatch = useAppDispatch()
   const router = useRouter()
-  const { user } = useAppSelector((state) => state.auth)
+  const { user } = useAppSelector((state) => state.auth) as any
   const { notifications } = useAppSelector((state) => state.ui)
 
   const handleLogout = async () => {
@@ -40,9 +40,9 @@ export function Navbar() {
         {/* User Info */}
         <div className="flex flex-col">
           <span className="text-xs leading-3 font-medium">
-            {user ? `${user.firstName} ${user.lastName}` : "Admin User"}
+            {user ? `${user.fullName}` : "Admin User"}
           </span>
-          <span className="text-[10px] text-gray-500 text-right">Admin</span>
+          <span className="text-[10px] text-gray-500 text-right">{user ? `${user.role}` : "Admin"}</span>
         </div>
 
         {/* Avatar */}

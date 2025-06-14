@@ -8,6 +8,11 @@ import subjectsSlice from "./slices/subjectsSlice"
 import classesSlice from "./slices/classesSlice"
 import busesSlice from "./slices/busesSlice"
 import uiSlice from "./slices/uiSlice"
+import adminSlice from "./slices/adminSlice"
+import profileSlice from "./slices/profileSlice"
+import userslice from "./slices/userSlice"
+import scheduleSlice from "./slices/scheduleSlice"
+import sectionSlice from "./slices/sectionSlice"
 
 export const store = configureStore({
   reducer: {
@@ -16,8 +21,13 @@ export const store = configureStore({
     students: studentsSlice,
     subjects: subjectsSlice,
     classes: classesSlice,
+    sections: sectionSlice,
     buses: busesSlice,
+    admin: adminSlice,
+    profile: profileSlice,
+    user: userslice,
     ui: uiSlice,
+    schedule: scheduleSlice
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

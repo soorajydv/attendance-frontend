@@ -5,6 +5,7 @@ import "./globals.css"
 import { ReduxProvider } from "@/components/providers/ReduxProvider"
 import { PrimeReactProvider } from "primereact/api"
 import { ToastProvider } from "@/components/providers/ToastProvider"
+import { QueryProvider } from "@/components/providers/QueryProvider" // ✅
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -22,11 +23,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <ReduxProvider>
-          <PrimeReactProvider>
-            <ToastProvider>
-              {children}
-            </ToastProvider>
-          </PrimeReactProvider>
+          <QueryProvider> {/* ✅ Add here */}
+            <PrimeReactProvider>
+              <ToastProvider>
+                {children}
+              </ToastProvider>
+            </PrimeReactProvider>
+          </QueryProvider>
         </ReduxProvider>
       </body>
     </html>

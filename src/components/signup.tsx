@@ -1,4 +1,3 @@
-// components/SignupForm.tsx
 interface Props {
   onSwitchToLogin: () => void;
 }

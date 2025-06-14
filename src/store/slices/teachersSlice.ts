@@ -30,7 +30,7 @@ const initialState: TeachersState = {
 
 export const fetchTeachers = createAsyncThunk(
   "teachers/fetchTeachers",
-  async (params: { page?: number; limit?: number; search?: string }, { rejectWithValue }) => {
+  async (params: { page?: number; limit?: number; search?: string, gender?:string, isVerified?:boolean }, { rejectWithValue }) => {
     try {
       const response = await teachersService.getTeachers(params)
       return response
@@ -42,7 +42,7 @@ export const fetchTeachers = createAsyncThunk(
 
 export const fetchTeacherById = createAsyncThunk(
   "teachers/fetchTeacherById",
-  async (id: number, { rejectWithValue }) => {
+  async (id: string, { rejectWithValue }) => {
     try {
       const response = await teachersService.getTeacherById(id)
       return response
@@ -66,7 +66,7 @@ export const createTeacher = createAsyncThunk(
 
 export const updateTeacher = createAsyncThunk(
   "teachers/updateTeacher",
-  async ({ id, data }: { id: number; data: Partial<Teacher> }, { rejectWithValue }) => {
+  async ({ id, data }: { id: string; data: Partial<Teacher> }, { rejectWithValue }) => {
     try {
       const response = await teachersService.updateTeacher(id, data)
       return response
@@ -76,7 +76,7 @@ export const updateTeacher = createAsyncThunk(
   },
 )
 
-export const deleteTeacher = createAsyncThunk("teachers/deleteTeacher", async (id: number, { rejectWithValue }) => {
+export const deleteTeacher = createAsyncThunk("teachers/deleteTeacher", async (id: string, { rejectWithValue }) => {
   try {
     await teachersService.deleteTeacher(id)
     return id
@@ -105,12 +105,12 @@ const teachersSlice = createSlice({
       })
       .addCase(fetchTeachers.fulfilled, (state, action) => {
         state.isLoading = false
-        state.teachers = action.payload.data
+        state.teachers = action.payload.teachers
         state.pagination = {
-          page: action.payload.page,
-          limit: action.payload.limit,
-          total: action.payload.total,
-          totalPages: action.payload.totalPages,
+          page: action.payload.pagination.page,
+          limit: action.payload.pagination.limit,
+          total: action.payload.pagination.total,
+          totalPages: action.payload.pagination.totalPages,
         }
       })
       .addCase(fetchTeachers.rejected, (state, action) => {
