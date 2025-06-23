@@ -23,6 +23,12 @@ const menuItems = [
         visible: [USER_ROLES.ADMIN],
       },
       {
+        icon: "/teacher.png",
+        label: "Schedule",
+        href: ROUTES.SCHEDULE,
+        visible: [USER_ROLES.ADMIN],
+      },
+      {
         icon: "/student.png",
         label: "Students",
         href: ROUTES.STUDENTS,

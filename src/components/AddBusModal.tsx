@@ -186,7 +186,7 @@ export default function AddBusModal({
                     >
                         <option value="">Select a driver</option>
                         {drivers && drivers.length > 0 ? (
-                            drivers.map((driver: Driver) => (
+                            drivers.map((driver: any) => (
                                 <option key={driver._id} value={driver._id}>
                                     {driver.fullName}
                                 </option>

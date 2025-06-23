@@ -48,9 +48,10 @@ export function StudentsList({ students, pagination, setSearch }: StudentsListPr
     setIsProfileDetailsModalOpen(true);
   };
 
-  const handleEdit = (student: Partial<Student>) => {
+  const handleEdit = async(student: Partial<Student>) => {
     setEditingStudent(student);
     setIsUpdateUserModalOpen(true);
+    await dispatch(fetchStudents({ page: 1, limit: 10 }));
   };
 
   const handleDelete = async (studentId: string) => {
@@ -137,7 +138,7 @@ export function StudentsList({ students, pagination, setSearch }: StudentsListPr
       {isProfileDetailsModalOpen && selectedStudent && (
         <ProfileDetails
           onClose={() => setIsProfileDetailsModalOpen(false)}
-          studentId={selectedStudent._id}
+          studentId={selectedStudent._id as string}
         />
       )}
     </div>

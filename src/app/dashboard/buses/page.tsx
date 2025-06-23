@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useTransition } from "react";
+import React, { useCallback, useEffect, useState, useTransition } from "react";
 import Image from "next/image";
 
 import { useAppDispatch, useAppSelector } from "@/hooks";
@@ -98,22 +98,23 @@ export default function BusesPage() {
     }
   };
 
-  const handleDelete = (busId: string) => {
-    startTransition(() => {
-      dispatch(deleteBus({ id: busId }))
-        .unwrap()
-        .then(() => {
-          toast.current.show({ severity: "success", detail: "Bus deleted" });
-          dispatch(fetchBuses({ page: 1, limit: 10, search }));
-        })
-        .catch(() => {
-          toast.current.show({
-            severity: "error",
-            detail: "Failed to delete bus",
-          });
+  const handleDelete =  useCallback(async(busId: string) => {
+    if (!busId) return;
+    await dispatch(deleteBus({ id: busId }))
+      .unwrap()
+      .then(() => {
+        toast.current.show({ severity: "success", detail: "Bus deleted" });
+        dispatch(fetchBuses({ page: 1, limit: 10, search }));
+      })
+      .catch(() => {
+        toast.current.show({
+          severity: "error",
+          detail: "Failed to delete bus",
         });
-    });
-  };
+      });
+    await dispatch(fetchBuses({ page: 1, limit: 10, search }));
+
+  },[dispatch,fetchBuses]);
 
   const renderRow = (bus: any) => (
     <tr

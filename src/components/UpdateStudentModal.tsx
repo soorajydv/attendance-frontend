@@ -2,11 +2,11 @@
 
 import type React from "react"
 import { useEffect } from "react"
-import { useForm, Controller } from "react-hook-form"
+import { useForm, Controller, FieldValues } from "react-hook-form"
 import { useAppSelector } from "@/hooks/useAppSelector"
 import { useToast } from "./providers/ToastProvider"
 import { useAppDispatch } from "@/hooks/useAppDispatch"
-import { updateUser } from "@/store/slices/userSlice"
+import { updateUser, clearError } from "@/store/slices/userSlice"
 import { Gender, Student } from "@/types"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -47,17 +47,17 @@ export default function UpdateUserModal({ isOpen, onClose, initialData, onSubmit
   const toast = useToast()
   const { error } = useAppSelector((state) => state.user)
   const { buses } = useAppSelector((state) => state.buses)
-  const { classes } = useAppSelector((state) => state.classes)
-  const { sections } = useAppSelector((state) => state.sections)
+  const { classes, isLoading: classesLoading } = useAppSelector((state) => state.classes)
+  const { sections, isLoading: sectionsLoading } = useAppSelector((state) => state.sections)
 
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isSubmitting, isDirty, dirtyFields },
     reset,
     setValue,
-  } = useForm({
+  } = useForm<FieldValues>({
     defaultValues: {
       fullName: "",
       email: "",
@@ -78,14 +78,36 @@ export default function UpdateUserModal({ isOpen, onClose, initialData, onSubmit
     }
   }, [dispatch, isOpen])
 
-  // Reset form when modal opens or initialData changes
   useEffect(() => {
-    if (isOpen && initialData) {
+    if (error && typeof error === "string" && error.trim() !== "") {
+      toast.current.show({ severity: "error", detail: error })
+      dispatch(clearError())
+    }
+  }, [error, toast, dispatch])
+
+  useEffect(() => {
+    if (isOpen && initialData && !classesLoading && !sectionsLoading) {
       const formatDate = (dateString: string) => {
         if (!dateString) return "";
         const date = new Date(dateString);
-        return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+        return date.toISOString().split('T')[0];
       };
+
+      // Map classId and sectionId from objects to IDs
+      let classId = initialData?.classId || "";
+      let sectionId = initialData?.sectionId || "";
+
+      // If classId is an object, find the corresponding ID by name
+      if (classId && typeof classId === "object" && classId.name) {
+        const matchedClass = classes.find((grade) => grade.name === classId.name);
+        classId = matchedClass?._id || "";
+      }
+
+      // If sectionId is an object, find the corresponding ID by name
+      if (sectionId && typeof sectionId === "object" && sectionId.name) {
+        const matchedSection = sections.find((section) => section.name === sectionId.name);
+        sectionId = matchedSection?._id || "";
+      }
 
       reset({
         fullName: initialData?.fullName || "",
@@ -94,26 +116,22 @@ export default function UpdateUserModal({ isOpen, onClose, initialData, onSubmit
         gender: initialData?.gender?.toLowerCase() || "",
         dateOfBirth: formatDate(initialData?.dateOfBirth) || "",
         busId: initialData?.busId || "",
-        classId: initialData?.classId || "",
-        sectionId: initialData?.sectionId || "",
-      })
+        classId: classId || "",
+        sectionId: sectionId || "",
+      });
     } else if (isOpen && !initialData) {
-      // Reset to empty form if no initial data
       reset({
         fullName: "",
         email: "",
         phoneNumber: "",
-        // gender: "",
-        // role: "",
         dateOfBirth: "",
         busId: "",
         classId: "",
         sectionId: "",
-      })
+      });
     }
-  }, [isOpen, initialData, reset])
+  }, [isOpen, initialData, classes, sections, classesLoading, sectionsLoading, reset])
 
-  // Additional reset when modal closes
   useEffect(() => {
     if (!isOpen) {
       reset({
@@ -126,44 +144,72 @@ export default function UpdateUserModal({ isOpen, onClose, initialData, onSubmit
         classId: "",
         sectionId: "",
       })
+      dispatch(clearError())
     }
-  }, [isOpen, reset])
+  }, [isOpen, reset, dispatch])
 
-  const handleFormSubmit = async (data: any) => {
+  const handleFormSubmit = async (data: FieldValues) => {
     try {
       if (!initialData?._id) {
         throw new Error("User ID is missing")
       }
 
+      // Initialize userData with _id
       const userData: Partial<Student> = {
         _id: initialData._id,
-        fullName: data.fullName || "",
-        email: data.email || "",
-        phoneNumber: data.phoneNumber || "",
-        gender: data.gender as Gender,
-        dateOfBirth: data.dateOfBirth || "",
-        busId: data.busId || "",
-        classId: data.classId || "",
-        sectionId: data.sectionId || "",
       }
 
-      await dispatch(updateUser({ id: userData._id as string, user: userData })).unwrap()
-      toast.current.show({ severity: "success", detail: "User updated successfully" })
-      onSubmit(data)
-      handleClose()
-    } catch (err) {
-      toast.current.show({ severity: "error", detail: "Failed to update user" })
+      // Include only modified fields using dirtyFields
+      const fieldsToCompare: (keyof Partial<Student>)[] = [
+        "fullName",
+        "email",
+        "phoneNumber",
+        "gender",
+        "dateOfBirth",
+        "busId",
+        "classId",
+        "sectionId",
+      ]
+
+      fieldsToCompare.forEach((field) => {
+        if (dirtyFields[field]) {
+          const formValue = data[field] ?? "";
+          if (field === "gender") {
+            userData[field] = formValue as Gender;
+          } else if (field === "dateOfBirth") {
+            userData[field] = formValue ? new Date(formValue).toISOString().split('T')[0] : "";
+          } else {
+            userData[field] = formValue;
+          }
+        }
+      })
+
+      // Debug log to verify submitted fields
+      // console.log("Submitting changed fields:", userData);
+
+      // Only dispatch update if there are changes (besides _id)
+      if (Object.keys(userData).length > 1) {
+        await dispatch(updateUser({ id: userData._id as string, user: userData })).unwrap()
+        toast.current.show({ severity: "success", detail: "User updated successfully" })
+        onSubmit(data)
+        handleClose()
+      } else {
+        toast.current.show({ severity: "info", detail: "No changes to save" })
+      }
+    } catch (err: any) {
+      const errorMessage = err.message || "Failed to update user. Please try again."
+      toast.current.show({ severity: "error", detail: errorMessage })
     }
   }
 
   const handleClose = () => {
     if (isDirty) {
-      if (window.confirm("You have unsaved changes. Are you sure you want to close?")) {
         reset()
+        dispatch(clearError())
         onClose()
-      }
     } else {
       reset()
+      dispatch(clearError())
       onClose()
     }
   }
@@ -189,28 +235,6 @@ export default function UpdateUserModal({ isOpen, onClose, initialData, onSubmit
       />
     </div>
   )
-
-  if (error) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="h-5 w-5" />
-              Error Loading User Data
-            </DialogTitle>
-          </DialogHeader>
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}. Please try again later.</AlertDescription>
-          </Alert>
-          <Button onClick={onClose} variant="outline" className="w-full">
-            Close
-          </Button>
-        </DialogContent>
-      </Dialog>
-    )
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -304,7 +328,7 @@ export default function UpdateUserModal({ isOpen, onClose, initialData, onSubmit
                   {errors.gender && (
                     <Alert variant="destructive" className="py-2">
                       <AlertCircle className="h-4 w-4" />
-                      <AlertDescription className="text-xs">{errors.gender.message}</AlertDescription>
+                      <AlertDescription className="text-xs">{errors as any}</AlertDescription>
                     </Alert>
                   )}
                 </div>
@@ -353,35 +377,35 @@ export default function UpdateUserModal({ isOpen, onClose, initialData, onSubmit
                   />
                 </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="sectionId" className="text-sm font-medium flex items-center gap-2">
-                <Text className="h-4 w-4" />
-                  Section
-                </Label>
-                <Controller
-                  name="sectionId"
-                  control={control}
-                  render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select section" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {sections.map((section) => (
-                          <SelectItem key={section._id} value={section._id as string}>
-                            <div className="flex items-center gap-2">
-                              <Bus className="h-4 w-4" />
-                              <div>
-                                <div className="font-medium">{section.name}</div>
+                <div className="space-y-2">
+                  <Label htmlFor="sectionId" className="text-sm font-medium flex items-center gap-2">
+                    <Text className="h-4 w-4" />
+                    Section
+                  </Label>
+                  <Controller
+                    name="sectionId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select section" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {sections.map((section) => (
+                            <SelectItem key={section._id} value={section._id as string}>
+                              <div className="flex items-center gap-2">
+                                <Bus className="h-4 w-4" />
+                                <div>
+                                  <div className="font-medium">{section.name}</div>
+                                </div>
                               </div>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     )}
-                />
-              </div>
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -410,8 +434,8 @@ export default function UpdateUserModal({ isOpen, onClose, initialData, onSubmit
                           </SelectItem>
                         ))}
                       </SelectContent>
-                      </Select>
-                    )}
+                    </Select>
+                  )}
                 />
               </div>
             </CardContent>

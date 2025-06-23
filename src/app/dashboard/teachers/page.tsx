@@ -4,11 +4,9 @@ import { useEffect, useState, useTransition } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks";
 import { TeachersList } from "@/components/TeachersList";
 import { fetchTeachers } from "@/store/slices/teachersSlice";
-import { useToast } from "@/components/providers/ToastProvider";
 import Spinner from "@/components/Spinner";
 
 export default function TeachersPage() {
-  const toast = useToast();
   const dispatch = useAppDispatch();
   const { teachers, error, pagination } = useAppSelector((state) => state.teachers);
   const [search, setSearch] = useState("");
@@ -29,11 +27,6 @@ export default function TeachersPage() {
     return () => clearTimeout(delayDebounce);
   }, [search, dispatch]);
   
-  useEffect(() => {
-    if (error) {
-      toast.current.show({ severity: "error", detail: error });
-    }
-  }, [error, toast]);
 
   if (isLoading) return <Spinner />;
 

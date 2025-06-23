@@ -13,6 +13,7 @@ import profileSlice from "./slices/profileSlice"
 import userslice from "./slices/userSlice"
 import scheduleSlice from "./slices/scheduleSlice"
 import sectionSlice from "./slices/sectionSlice"
+import periodSlice from "./slices/periodSlice"
 
 export const store = configureStore({
   reducer: {
@@ -21,11 +22,12 @@ export const store = configureStore({
     students: studentsSlice,
     subjects: subjectsSlice,
     classes: classesSlice,
+    periods: periodSlice,
     sections: sectionSlice,
     buses: busesSlice,
     admin: adminSlice,
     profile: profileSlice,
-    user: userslice,
+    users: userslice,
     ui: uiSlice,
     schedule: scheduleSlice
   },

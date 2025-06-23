@@ -30,7 +30,7 @@ export const fetchSubjects = createAsyncThunk(
   "subjects/fetchSubjects",
   async (params: { page?: number; limit?: number; search?: string }, { rejectWithValue }) => {
     try {
-      const response = await subjectsService.getSubjects()
+      const response = await subjectsService.getSubjects(params)      
       return response
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || "Failed to fetch subjects"
@@ -82,7 +82,7 @@ const subjectsSlice = createSlice({
   name: "subjects",
   initialState,
   reducers: {
-    clearError: (state) => {
+    clearSubjectError: (state) => {
       state.error = null
     },
   },
@@ -95,8 +95,8 @@ const subjectsSlice = createSlice({
       })
       .addCase(fetchSubjects.fulfilled, (state, action) => {
         state.isLoading = false
-        state.subjects = action.payload.subjects
-        state.pagination = action.payload.pagination
+        state.subjects = action.payload.data.subjects
+        state.pagination = action.payload.data.pagination
       })
       .addCase(fetchSubjects.rejected, (state, action) => {
         state.isLoading = false
@@ -147,5 +147,5 @@ const subjectsSlice = createSlice({
   },
 })
 
-export const { clearError } = subjectsSlice.actions
+export const { clearSubjectError } = subjectsSlice.actions
 export default subjectsSlice.reducer

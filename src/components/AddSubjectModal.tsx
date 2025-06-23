@@ -1,61 +1,38 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import type { Subject } from "@/types"
+import { useAppDispatch, useAppSelector } from "@/hooks"
+import { addSubject, clearSubjectError, fetchSubjects } from "@/store/slices/subjectsSlice"
+import { useToast } from "./providers/ToastProvider"
 
-interface EditSubjectModalProps {
+interface AddSubjectModalProps {
   isOpen: boolean
   onClose: () => void
-  initialData: Subject | null
-  handleEdit: (data: Subject) => void
 }
 
-const EditSubjectModal: React.FC<EditSubjectModalProps> = ({
-  isOpen,
-  onClose,
-  initialData,
-  handleEdit,
-}) => {
+const AddSubjectModal: React.FC<AddSubjectModalProps> = ({ isOpen, onClose }) => {
   const [name, setName] = useState("")
   const [code, setCode] = useState("")
   const [description, setDescription] = useState("")
-  const [error, setError] = useState<string | null>(null)
 
-  const isEdit = Boolean(initialData?._id)
+  const dispatch = useAppDispatch();
+  const {error} = useAppSelector((state)=>state.subjects)
+  const toast = useToast();
 
-  useEffect(() => {
-    if (isOpen) {
-      setName(initialData?.name || "")
-      setCode(initialData?.code || "")
-      setDescription(initialData?.description || "")
-      setError(null)
-    }
-  }, [isOpen, initialData])
+  useEffect(()=>{
+    if(error) toast.current.show({severity:"error",detail:error})
+      clearSubjectError
+  },[error])
 
-  const handleSubmit = () => {
-    if (name.trim().length < 2) {
-      setError("Subject name must be at least 2 characters.")
-      return
-    }
-
-    const payload = {
-      ...(isEdit && { _id: initialData?._id }), // Include _id only when editing
-      name: name.trim(),
-      code: code.trim(),
-      description: description.trim(),
-    } as Subject
-
-    handleEdit(payload)
+  const handleSubmit = async() => {
+    await dispatch(addSubject({name,code,description}))
+    toast.current.show({severity:"success",detail:"Subject added"})
+    await dispatch(fetchSubjects({page:1,limit:10}))
+    setName(""); setDescription(""),setCode("")
     onClose()
   }
 
@@ -64,7 +41,7 @@ const EditSubjectModal: React.FC<EditSubjectModalProps> = ({
       <DialogContent className="sm:max-w-md rounded-xl p-6 shadow-lg">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold text-gray-800">
-            Edit Subject
+            Add Subject
           </DialogTitle>
         </DialogHeader>
 
@@ -86,7 +63,6 @@ const EditSubjectModal: React.FC<EditSubjectModalProps> = ({
               value={name}
               onChange={(e) => {
                 setName(e.target.value)
-                setError(null)
               }}
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
@@ -103,7 +79,6 @@ const EditSubjectModal: React.FC<EditSubjectModalProps> = ({
               value={code}
               onChange={(e) => {
                 setCode(e.target.value)
-                setError(null)
               }}
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
@@ -120,7 +95,6 @@ const EditSubjectModal: React.FC<EditSubjectModalProps> = ({
               value={description}
               onChange={(e) => {
                 setDescription(e.target.value)
-                setError(null)
               }}
               className="rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
             />
@@ -139,7 +113,7 @@ const EditSubjectModal: React.FC<EditSubjectModalProps> = ({
             onClick={handleSubmit}
             className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 transition-colors duration-200"
           >
-            Update
+            Add
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -147,4 +121,4 @@ const EditSubjectModal: React.FC<EditSubjectModalProps> = ({
   )
 }
 
-export default EditSubjectModal
+export default AddSubjectModal

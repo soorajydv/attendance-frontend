@@ -10,6 +10,7 @@ import ActionButtons from "@/components/ActionButton"
 import { Loader2, Plus, Search, Filter, RefreshCcw } from "lucide-react"
 import { useToast } from "@/components/providers/ToastProvider"
 import type { Subject, TableColumn } from "@/types"
+import AddSubjectModal from "@/components/AddSubjectModal"
 
 const columns: TableColumn[] = [
   {
@@ -34,7 +35,7 @@ export default function SubjectsPage() {
   const toast = useToast()
 
   const [isLoading, setIsLoading] = useState(true)
-  const [hasLoaded, setHasLoaded] = useState(false)
+  const [openAddModal, setOpenAddModal] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
 
@@ -43,7 +44,6 @@ export default function SubjectsPage() {
       setIsLoading(true)
       try {
         await dispatch(fetchSubjects({ page: 1, limit: 10, search: "" }))
-        setHasLoaded(true)
       } catch (error) {
         console.error("Failed to load subjects:", error)
       } finally {
@@ -53,30 +53,19 @@ export default function SubjectsPage() {
     loadSubjects()
   }, [dispatch])
 
-  const handleSubmit = async (data: Subject, isEdit: boolean) => {
+  const handleSubmit = async (data: Subject) => {
     try {
-      if (isEdit) {
         // Update existing subject
         await dispatch(
           editSubject({
-            id: data._id as string,
+            id: data?._id as string,
             payload: {
-              name: data.name,
-              code: data.code,
-              description: data.description,
+              name: data?.name,
+              code: data?.code,
+              description: data?.description,
             },
           }),
         ).unwrap()
-      } else {
-        // Add new subject
-        await dispatch(
-          addSubject({
-            name: data.name,
-            code: data.code,
-            description: data.description,
-          }),
-        ).unwrap()
-      }
 
       // Refresh the subjects list
       await dispatch(fetchSubjects({ page: 1, limit: 10 }))
@@ -86,7 +75,7 @@ export default function SubjectsPage() {
 
       toast.current.show({
         severity: "success",
-        detail: `Subject ${isEdit ? "updated" : "added"} successfully!`,
+        detail: `Subject added successfully!`,
       })
     } catch (error: any) {
       console.error("Error saving subject:", error)
@@ -101,7 +90,7 @@ export default function SubjectsPage() {
 
   const handleAddClick = () => {
     setSelectedSubject(null)
-    setIsModalOpen(true)
+    setOpenAddModal(true)
   }
 
   const handleDelete = async (id: string) => {
@@ -128,7 +117,7 @@ const renderRow = (subject: Subject, index: number) => (
     className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-[#F1F0FF] transition-colors duration-150"
   >
     <td className="px-4 py-4 hidden md:table-cell font-medium text-gray-600">
-      {subject.code}
+      {subject?.code || "N/A"}
     </td>
     <td className="px-4 py-4 font-medium text-gray-900">
       {subject.name}
@@ -198,6 +187,14 @@ const renderRow = (subject: Subject, index: number) => (
         ) : (
           <DataTable columns={columns} renderRow={renderRow} data={subjects} />
         )}
+
+        <AddSubjectModal
+          isOpen={openAddModal}
+          onClose={() => {
+            setOpenAddModal(false)
+            setSelectedSubject(null)
+          }}
+        />
 
         <EditSubjectModal
           isOpen={isModalOpen}

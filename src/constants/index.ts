@@ -10,6 +10,7 @@ export const ROUTES = {
   LOGIN: "/auth/login",
   DASHBOARD: "/dashboard",
   TEACHERS: "/dashboard/teachers",
+  SCHEDULE: "/dashboard/schedules",
   STUDENTS: "/dashboard/students",
   SUBJECTS: "/dashboard/subjects",
   CLASSES: "/dashboard/classes",

@@ -2,7 +2,7 @@ import { profileService } from "@/services/profileService";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 const initialState:any = {
-    profile:{},
+    profile: null,
     isLoading: false,
     error: null,
     message: null
@@ -12,6 +12,8 @@ export const getProfile = createAsyncThunk(
     "profile/getProfile", async (params: { id: string }, { rejectWithValue }) => {
         try {
             const response = await profileService.getProfile(params);
+            console.log("response",response);
+            
             return response;
         } catch (error: any) {
             return rejectWithValue(error.message)

@@ -37,6 +37,7 @@ export interface User extends BaseEntity {
 
 // Teacher extends User
 export interface Teacher extends User {
+  data?: Teacher
   organizationId: string
   isLogin: boolean
   subjects?: string[]
@@ -63,6 +64,8 @@ export interface Subject extends BaseEntity {
 };
 
 export interface Class extends BaseEntity {
+  studentCount: number
+  isActive(isActive: any): import("react").ReactNode
   user?: any
   name: string
   code?: string
@@ -132,4 +135,65 @@ export interface AuthState {
 export interface Section extends BaseEntity{
   name: string;
   classId: string | Class; // String if just an ID, or full `Class` object if populated
+}
+
+export interface DropdownOption {
+  _id?: string | undefined
+  id?: string | undefined
+  name: string
+  [key: string]: any
+}
+
+
+export interface Schedule {
+  _id: string;
+  organizationId: string;
+  classId: string;
+  className: string;
+  sectionId: string;
+  section: string;
+  subjectId: string;
+  subject: string;
+  teacherId: string;
+  periodId: string;
+  period: string;
+  day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+  status: 'active' | 'inactive' | 'draft';
+  isRecurring: boolean;
+  recurrenceEndDate?: string;
+  notes?: string;
+  startTime: string;
+  endTime: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateScheduleData {
+  classId: string;
+  sectionId: string;
+  subjectId: string;
+  teacherId: string;
+  periodId: string;
+  day: string;
+  status?: 'active' | 'inactive' | 'draft';
+  isRecurring?: boolean;
+  recurrenceEndDate?: string;
+  notes?: string;
+}
+
+export interface UpdateScheduleData extends Partial<CreateScheduleData> {
+  _id: string;
+}
+
+export interface ScheduleFilters {
+  search?: string;
+  status?: string;
+  day?: string;
+}
+
+export interface ScheduleOptions {
+  subjects: Array<{ _id: string; name: string }>;
+  classes: Array<{ _id: string; name: string }>;
+  sections: Array<{ _id: string; name: string; classId: string }>;
+  periods: Array<{ _id: string; name: string; startTime: string; endTime: string }>;
 }

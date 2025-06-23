@@ -1,12 +1,15 @@
 import type { Subject } from "@/types"
-import { API_ENDPOINTS } from "@/constants"
 import { Api } from "@/configs/api.config"
 
 class SubjectsService {
-  async getSubjects() {
-    const response = await Api.get('/subjects')
-    const result = response.data.data
-    return { subjects: result.subjects, pagination:result.pagination }
+  async getSubjects(params: { page?: number; limit?: number; search?: string}) {
+    const queryParams = new URLSearchParams()
+    if (params.page) queryParams.append("page", params.page.toString())
+    if (params.limit) queryParams.append("limit", params.limit.toString())
+    if (params.search) queryParams.append("search", params.search)
+
+    const response = await Api.get(`/subjects?${queryParams.toString()}`)
+    return response.data
   }
 
   async getSubjectById(id: string){

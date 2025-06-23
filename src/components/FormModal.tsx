@@ -8,13 +8,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { BaseEntity, Gender, UserRole } from "@/types"
 
-interface TeacherData {
+interface TeacherData extends BaseEntity {
   fullName: string
   email: string
   phoneNumber: string
-  gender: "MALE" | "FEMALE" | "OTHER"
-  role: "TEACHER" | "STUDENT" | "ADMIN"
+  gender: Gender
+  role: UserRole
   dateOfBirth?: string
   organizationId: string
   address?: string
@@ -51,8 +52,6 @@ export default function TeacherProfileModal({
     })
   }
 
-  console.log("data",data);
-  
   const getGenderConfig = (gender: string) => {
     switch (gender) {
       case "MALE":
