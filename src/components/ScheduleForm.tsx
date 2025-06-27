@@ -39,24 +39,68 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
 
   useEffect(() => {
     if (schedule) {
+      // Format the recurrence end date for the datetime-local input
+      let formattedRecurrenceEndDate = '';
+      if (schedule.recurrenceEndDate) {
+        try {
+          const date = new Date(schedule.recurrenceEndDate);
+          // Format as YYYY-MM-DDTHH:MM for datetime-local input
+          formattedRecurrenceEndDate = date.toISOString().slice(0, 16);
+        } catch (error) {
+          console.error('Error formatting recurrence end date:', error);
+        }
+      }
+
       setFormData({
-        classId: schedule.classId,
-        sectionId: schedule.sectionId,
-        subjectId: schedule.subjectId,
-        teacherId: schedule.teacherId,
-        periodId: schedule.periodId,
-        day: schedule.day,
-        status: schedule.status,
-        isRecurring: schedule.isRecurring,
-        recurrenceEndDate: schedule.recurrenceEndDate || '',
+        classId: schedule.classId || '',
+        sectionId: schedule.sectionId || '',
+        subjectId: schedule.subjectId || '',
+        teacherId: schedule.teacherId || '',
+        periodId: schedule.periodId || '',
+        day: schedule.day || 'Monday',
+        status: schedule.status || 'draft',
+        isRecurring: schedule.isRecurring ?? true,
+        recurrenceEndDate: formattedRecurrenceEndDate,
         notes: schedule.notes || '',
+      });
+    } else {
+      // Reset form for new schedule
+      setFormData({
+        classId: '',
+        sectionId: '',
+        subjectId: '',
+        teacherId: '',
+        periodId: '',
+        day: 'Monday',
+        status: 'draft',
+        isRecurring: true,
+        recurrenceEndDate: '',
+        notes: '',
       });
     }
   }, [schedule]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    const submitData = { ...formData };
+    
+    // Convert recurrenceEndDate to ISO string if it exists and isRecurring is true
+    if (submitData.isRecurring && submitData.recurrenceEndDate) {
+      try {
+        const date = new Date(submitData.recurrenceEndDate);
+        submitData.recurrenceEndDate = date.toISOString();
+      } catch (error) {
+        console.error('Error converting recurrence end date:', error);
+        // If conversion fails, clear the field
+        submitData.recurrenceEndDate = '';
+      }
+    } else if (!submitData.isRecurring) {
+      // Clear recurrence end date if not recurring
+      submitData.recurrenceEndDate = '';
+    }
+
+    onSubmit(submitData);
   };
 
   const handleChange = (field: keyof CreateScheduleData, value: any) => {
@@ -64,6 +108,11 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
   };
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  // Filter sections based on selected class
+  const availableSections = scheduleOptions?.sections?.filter(
+    section => !formData.classId || section.classId === formData.classId
+  ) || [];
 
   return (
     <Card className="w-full max-w-2xl">
@@ -73,6 +122,22 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* <div className="space-y-2">
+              <Label htmlFor="teacherId">Teacher</Label>
+              <Select value={formData.teacherId || undefined} onValueChange={(value) => handleChange('teacherId', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Teacher" />
+                </SelectTrigger>
+                <SelectContent>
+                  {scheduleOptions?.teachers?.map((teacher) => (
+                    <SelectItem key={teacher._id} value={teacher._id}>
+                      {teacher.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div> */}
+
             <div className="space-y-2">
               <Label htmlFor="subjectId">Subject</Label>
               <Select value={formData.subjectId || undefined} onValueChange={(value) => handleChange('subjectId', value)}>
@@ -107,7 +172,11 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="classId">Class</Label>
-              <Select value={formData.classId || undefined} onValueChange={(value) => handleChange('classId', value)}>
+              <Select value={formData.classId || undefined} onValueChange={(value) => {
+                handleChange('classId', value);
+                // Reset section when class changes
+                handleChange('sectionId', '');
+              }}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select Class" />
                 </SelectTrigger>
@@ -123,12 +192,16 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="sectionId">Section</Label>
-              <Select value={formData.sectionId || undefined} onValueChange={(value) => handleChange('sectionId', value)}>
+              <Select 
+                value={formData.sectionId || undefined} 
+                onValueChange={(value) => handleChange('sectionId', value)}
+                disabled={!formData.classId}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Section" />
                 </SelectTrigger>
                 <SelectContent>
-                  {scheduleOptions?.sections?.map((section) => (
+                  {availableSections.map((section) => (
                     <SelectItem key={section._id} value={section._id}>
                       {section.name}
                     </SelectItem>
@@ -166,17 +239,6 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="teacherId">Teacher ID</Label>
-            <Input
-              id="teacherId"
-              value={formData.teacherId}
-              onChange={(e) => handleChange('teacherId', e.target.value)}
-              placeholder="Enter Teacher ID"
-              required
-            />
           </div>
 
           <div className="flex items-center space-x-2">

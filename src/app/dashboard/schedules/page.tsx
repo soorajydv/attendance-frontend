@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ScheduleCalendar from '@/components/ScheduleCalendar';
 import ScheduleForm from '@/components/ScheduleForm';
-import ScheduleFiltersComponent from '@/components/ScheduleFilters';
 import { 
   fetchScheduleOptions, 
   createSchedule, 
@@ -14,26 +13,41 @@ import {
   setSelectedSchedule,
   clearError 
 } from '@/store/slices/scheduleSlice';
+import { fetchSubjects } from '@/store/slices/subjectsSlice';
+import { fetchClasses } from '@/store/slices/classesSlice';
+import { fetchSections } from '@/store/slices/sectionSlice';
+import { fetchPeriods } from '@/store/slices/periodSlice';
 import { Schedule, CreateScheduleData, ScheduleFilters } from '@/types/index';
 import { Plus, Calendar, List, Grid } from 'lucide-react';
 import { useAppDispatch } from '@/hooks/useAppDispatch';
 import { useAppSelector } from '@/hooks/useAppSelector';
 import { useToast } from '@/components/providers/ToastProvider';
+import { fetchTeachers } from '@/store/slices/teachersSlice';
 
-const ScheduleManagement: React.FC = () => {
+
+const ScheduleManagement = ({teacherId}:any) => {
   const dispatch = useAppDispatch();
-  const { schedules, scheduleOptions, loading, error, selectedSchedule } = useAppSelector(
+  const { schedules, loading, error, selectedSchedule } = useAppSelector(
     (state) => state.schedule
   );
+  const { subjects } = useAppSelector((state) => state.subjects);
+  const { classes } = useAppSelector((state) => state.classes);
+  const { sections } = useAppSelector((state) => state.sections);
+  const { periods } = useAppSelector((state) => state.periods);
+  const { teachers } = useAppSelector((state) => state.teachers);
 
   const [showForm, setShowForm] = useState(false);
-  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const [filters, setFilters] = useState<ScheduleFilters>({});
-  const [teacherId] = useState('675dd3f4b7b2ba60c9b90d6a'); // You might want to get this from auth context
 
   const toast = useToast();
+
   useEffect(() => {
     dispatch(fetchScheduleOptions(teacherId));
+    dispatch(fetchSubjects({ limit: 100 }));
+    dispatch(fetchClasses({ limit: 100 }));
+    dispatch(fetchSections({ limit: 100 }));
+    dispatch(fetchPeriods({ limit: 100 }));
+    dispatch(fetchTeachers({ limit: 100 }));
   }, [dispatch, teacherId]);
 
   useEffect(() => {
@@ -73,7 +87,7 @@ const ScheduleManagement: React.FC = () => {
         detail: "Schedule updated successfully",
       });
       setShowForm(false);
-      dispatch(setSelectedSchedule(null));
+      dispatch(setSelectedSchedule(null!));
       dispatch(fetchScheduleOptions(teacherId));
     } catch (error) {
       console.error('Error updating schedule:', error);
@@ -110,15 +124,24 @@ const ScheduleManagement: React.FC = () => {
         !schedule.className.toLowerCase().includes(filters.search.toLowerCase())) {
       return false;
     }
-    if (filters.status && schedule.status !== filters.status) {
+    if (filters.status && filters.status !== 'all' && schedule.status !== filters.status) {
       return false;
     }
-    if (filters.day && schedule.day !== filters.day) {
+    if (filters.day && filters.day !== 'all' && schedule.day !== filters.day) {
       return false;
     }
     return true;
   });
 
+  // Create schedule options from the individual slices
+  const scheduleOptions = {
+    subjects: subjects.map(s => ({ _id: s._id, name: s.name })),
+    classes: classes.map(c => ({ _id: c._id, name: c.name })),
+    sections: sections.map(s => ({ _id: s._id, name: s.name, classId: s.class._id })),
+    periods: periods.map(p => ({ _id: p._id, name: p.name, startTime: p.startTime, endTime: p.endTime })),
+    teachers: teachers.map(p => ({ _id: p._id, name: p.fullName})),
+  };
+  
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -129,44 +152,7 @@ const ScheduleManagement: React.FC = () => {
               <h1 className="text-3xl font-bold text-gray-900">Schedule Management</h1>
               <p className="text-gray-600 mt-1">Manage your teaching schedules and class assignments</p>
             </div>
-            <div className="flex gap-2">
-              <div className="flex bg-gray-100 rounded-lg p-1">
-                <Button
-                  variant={viewMode === 'calendar' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('calendar')}
-                  className="px-3"
-                >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Calendar
-                </Button>
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className="px-3"
-                >
-                  <List className="h-4 w-4 mr-2" />
-                  List
-                </Button>
-              </div>
-              <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Schedule
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <ScheduleFiltersComponent
-          filters={filters}
-          onFiltersChange={setFilters}
-          onClearFilters={() => setFilters({})}
-        />
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
           <div className="bg-white p-6 rounded-lg shadow-sm border">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -178,43 +164,12 @@ const ScheduleManagement: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Grid className="h-6 w-6 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {schedules.filter(s => s.status === 'active').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Grid className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Draft</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {schedules.filter(s => s.status === 'draft').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border">
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <Grid className="h-6 w-6 text-red-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Inactive</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {schedules.filter(s => s.status === 'inactive').length}
-                </p>
-              </div>
+        </div>
+            <div className="flex gap-2">
+              <Button onClick={() => setShowForm(true)} className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Schedule
+              </Button>
             </div>
           </div>
         </div>
@@ -244,7 +199,7 @@ const ScheduleManagement: React.FC = () => {
             </DialogHeader>
             <ScheduleForm
               schedule={selectedSchedule}
-              scheduleOptions={scheduleOptions}
+              scheduleOptions={scheduleOptions as any}
               onSubmit={selectedSchedule ? handleUpdateSchedule : handleCreateSchedule}
               onCancel={handleCloseForm}
               loading={loading}

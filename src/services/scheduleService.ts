@@ -4,16 +4,14 @@ import { Schedule, CreateScheduleData, UpdateScheduleData, ScheduleFilters } fro
 
 class ScheduleService {
   getSchedules = async (params: {
-    organizationId: string;
     page?: number;
     limit?: number;
     search?: string;
     status?: string;
     day?: string;
   }) => {
-    const { organizationId, page = 1, limit = 10, search, status, day } = params;
+    const { page = 1, limit = 10, search, status, day } = params;
     const query = new URLSearchParams({
-      organizationId,
       page: page.toString(),
       limit: limit.toString(),
       ...(search && { search }),
@@ -21,8 +19,7 @@ class ScheduleService {
       ...(day && { day }),
     });
     const response = await Api.get(`/schedules?${query}`);
-    const result = response.data;
-    return { schedules: result.schedules, pagination: result.pagination };
+    return response.data;
   };
 
   getScheduleById = async (id: string) => {

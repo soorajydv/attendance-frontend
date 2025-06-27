@@ -27,6 +27,30 @@ export const signupUser = createAsyncThunk(
   }
 )
 
+export const forgotPassword = createAsyncThunk(
+  "auth/forgotPassword",
+  async (email: string, { rejectWithValue }) => {
+    try {
+      const response = await authService.forgotPassword(email)
+      return response
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || error.message || "Signup failed")
+    }
+  }
+)
+
+export const resetPassword = createAsyncThunk(
+  "auth/resetPassword",
+  async ({email, otp, newPassword}:any, { rejectWithValue }) => {
+    try {
+      const response = await authService.resetPassword(email,otp,newPassword)
+      return response
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || error.message || "Signup failed")
+    }
+  }
+)
+
 export const logoutUser = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
@@ -88,6 +112,32 @@ const authSlice = createSlice({
         state.error = null
       })
       .addCase(signupUser.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+      })
+
+      .addCase(forgotPassword.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(forgotPassword.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.error = null
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+      })
+
+      .addCase(resetPassword.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(resetPassword.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.error = null
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
         state.isLoading = false
         state.error = action.payload as string
       })

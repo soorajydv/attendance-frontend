@@ -12,6 +12,16 @@ export const authService = {
     return response.data.data
   },
 
+  forgotPassword: async(email:string) => {
+    const response = await Api.post('/auth/forgot-password',{email});
+    return response.data
+  },
+
+  resetPassword: async(email:string,otp:string,newPassword:string) => {
+    const response = await Api.post('/auth/reset-password',{email,otp,newPassword});
+    return response.data
+  },
+
   logout: async () => {
     // Optional: You can make a backend call or just clear client state
     return null

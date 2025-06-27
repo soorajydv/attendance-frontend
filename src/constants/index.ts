@@ -19,6 +19,7 @@ export const ROUTES = {
   MESSAGES: "/dashboard/messages",
   PROFILE: "/dashboard/profile",
   SETTINGS: "/dashboard/settings",
+  TRANSACTIONS: "/dashboard/billings",
 } as const
 
 export const API_ENDPOINTS = {

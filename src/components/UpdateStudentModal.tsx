@@ -6,7 +6,7 @@ import { useForm, Controller, FieldValues } from "react-hook-form"
 import { useAppSelector } from "@/hooks/useAppSelector"
 import { useToast } from "./providers/ToastProvider"
 import { useAppDispatch } from "@/hooks/useAppDispatch"
-import { updateUser, clearError } from "@/store/slices/userSlice"
+import { updateUser, clearUserError } from "@/store/slices/userSlice"
 import { Gender, Student } from "@/types"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -45,7 +45,7 @@ interface UpdateUserModalProps {
 export default function UpdateUserModal({ isOpen, onClose, initialData, onSubmit }: UpdateUserModalProps) {
   const dispatch = useAppDispatch()
   const toast = useToast()
-  const { error } = useAppSelector((state) => state.user)
+  const { error } = useAppSelector((state) => state.users)
   const { buses } = useAppSelector((state) => state.buses)
   const { classes, isLoading: classesLoading } = useAppSelector((state) => state.classes)
   const { sections, isLoading: sectionsLoading } = useAppSelector((state) => state.sections)
@@ -81,7 +81,7 @@ export default function UpdateUserModal({ isOpen, onClose, initialData, onSubmit
   useEffect(() => {
     if (error && typeof error === "string" && error.trim() !== "") {
       toast.current.show({ severity: "error", detail: error })
-      dispatch(clearError())
+      dispatch(clearUserError())
     }
   }, [error, toast, dispatch])
 
@@ -144,7 +144,7 @@ export default function UpdateUserModal({ isOpen, onClose, initialData, onSubmit
         classId: "",
         sectionId: "",
       })
-      dispatch(clearError())
+      dispatch(clearUserError())
     }
   }, [isOpen, reset, dispatch])
 
@@ -205,11 +205,11 @@ export default function UpdateUserModal({ isOpen, onClose, initialData, onSubmit
   const handleClose = () => {
     if (isDirty) {
         reset()
-        dispatch(clearError())
+        dispatch(clearUserError())
         onClose()
     } else {
       reset()
-      dispatch(clearError())
+      dispatch(clearUserError())
       onClose()
     }
   }

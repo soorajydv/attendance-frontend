@@ -7,14 +7,12 @@ import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import ActionButtons from "./ActionButton";
 import TeacherProfileModal from "./FormModal";
-import { useAppDispatch, useAppSelector } from "@/hooks";
+import { useAppDispatch } from "@/hooks";
 import { deleteUser, updateUser } from "@/store/slices/userSlice";
 import AddUserModal from "./AddUserModal";
-import {
-  fetchScheduleOptions,
-  updateSchedules,
-} from "@/store/slices/scheduleSlice";
 import UpdateTeacherModal from "./UpdateTeacherModal";
+import ScheduleManagement from "@/app/dashboard/schedules/page";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface TeachersListProps {
   teachers: Teacher[];
@@ -31,11 +29,7 @@ interface TeachersListProps {
 const columns: TableColumn[] = [
   { header: "Info", accessor: "info" },
   { header: "Phone", accessor: "phone", className: "hidden lg:table-cell" },
-  {
-    header: "Schedule",
-    accessor: "schedule",
-    className: "hidden lg:table-cell",
-  },
+  { header: "Schedule", accessor: "schedule", className: "hidden lg:table-cell" },
   { header: "Actions", accessor: "action" },
 ];
 
@@ -49,6 +43,7 @@ export function TeachersList({
   const [localSearch, setLocalSearch] = useState("");
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [updateTeacherModalOpen, setUpdateTeacherModalOpen] = useState(false);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false); // New state for Schedule modal
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
@@ -58,7 +53,6 @@ export function TeachersList({
     const delay = setTimeout(() => setSearch(localSearch), 300);
     return () => clearTimeout(delay);
   }, [localSearch, setSearch]);
-
 
   const handleView = useCallback((teacher: Teacher) => {
     setSelectedTeacher(teacher);
@@ -83,6 +77,11 @@ export function TeachersList({
     },
     [dispatch, refetchTeacher]
   );
+
+  const handleScheduleManagement = useCallback((teacherId: string) => {
+    setSelectedTeacherId(teacherId);
+    setScheduleModalOpen(true);
+  }, []);
 
   const convertTeacherData = useCallback(
     (teacher: Teacher) => ({
@@ -128,7 +127,7 @@ export function TeachersList({
         <td>
           <button
             className="px-4 py-3 hidden md:table-cell text-blue-600 underline cursor-pointer"
-            onClick={undefined}
+            onClick={() => handleScheduleManagement(teacher._id as string)}
           >
             Schedule
           </button>
@@ -148,7 +147,7 @@ export function TeachersList({
         </td>
       </tr>
     ),
-    [ handleView, handleDelete]
+    [handleView, handleDelete, handleScheduleManagement]
   );
 
   return (
@@ -210,6 +209,17 @@ export function TeachersList({
           teacherId={selectedTeacherId}
           onSubmit={handleUpdateTeacher}
         />
+      )}
+
+      {selectedTeacherId && (
+        <Dialog open={scheduleModalOpen} onOpenChange={setScheduleModalOpen}>
+          <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Manage Schedule for Teacher</DialogTitle>
+            </DialogHeader>
+            <ScheduleManagement teacherId={selectedTeacherId} />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

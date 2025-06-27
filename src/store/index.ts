@@ -14,6 +14,7 @@ import userslice from "./slices/userSlice"
 import scheduleSlice from "./slices/scheduleSlice"
 import sectionSlice from "./slices/sectionSlice"
 import periodSlice from "./slices/periodSlice"
+import billingSlice from "./slices/billingSlice"
 
 export const store = configureStore({
   reducer: {
@@ -29,7 +30,8 @@ export const store = configureStore({
     profile: profileSlice,
     users: userslice,
     ui: uiSlice,
-    schedule: scheduleSlice
+    schedule: scheduleSlice,
+    billing: billingSlice
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

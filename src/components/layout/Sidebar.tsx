@@ -23,12 +23,6 @@ const menuItems = [
         visible: [USER_ROLES.ADMIN],
       },
       {
-        icon: "/teacher.png",
-        label: "Schedule",
-        href: ROUTES.SCHEDULE,
-        visible: [USER_ROLES.ADMIN],
-      },
-      {
         icon: "/student.png",
         label: "Students",
         href: ROUTES.STUDENTS,
@@ -57,10 +51,16 @@ const menuItems = [
         label: "Buses",
         href: ROUTES.BUSES,
         visible: [USER_ROLES.ADMIN],
+      },      
+      {
+        icon: "/finance.png",
+        label: "Billing & Payments",
+        href: ROUTES.TRANSACTIONS,
+        visible: [USER_ROLES.ADMIN],
       },
       {
         icon: "/message.png",
-        label: "Messages",
+        label: "Events",
         href: ROUTES.MESSAGES,
         visible: [USER_ROLES.ADMIN],
       },

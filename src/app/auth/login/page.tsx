@@ -143,7 +143,7 @@ export default function LoginPage() {
 
           {!isSignup && (
             <div className="text-sm text-right mt-2">
-              <a href="#" className="text-[#1a75ff] hover:underline">
+              <a href="/auth/forgot_password" className="text-[#1a75ff] hover:underline">
                 Forgot password?
               </a>
             </div>
@@ -188,12 +188,6 @@ export default function LoginPage() {
             >
               {isSignup ? "Login here" : "Signup now"}
             </button>
-          </div>
-
-          <div className="mt-6 text-center text-sm text-gray-500">
-            <p>Demo credentials (pre-filled):</p>
-            <p>Email: admin@gmail.com</p>
-            <p>Password: Password@123</p>
           </div>
         </form>
       </div>

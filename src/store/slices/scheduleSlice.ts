@@ -19,6 +19,19 @@ const initialState: ScheduleState = {
   selectedSchedule: null,
 };
 
+export const fetchAllSchedules = createAsyncThunk(
+  "schedule/fetchAllSchedules",
+  async (query:{page: number,limit:number}, { rejectWithValue }) => {
+    try {
+      const response = await scheduleService.getSchedules(query);
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.message || "Failed to fetch schedule options";
+      return rejectWithValue(message);
+    }
+  }
+);
+
 export const fetchScheduleOptions = createAsyncThunk(
   "schedule/fetchScheduleOptions",
   async (teacherId: string, { rejectWithValue }) => {
@@ -90,12 +103,13 @@ const scheduleSlice = createSlice({
       })
       .addCase(fetchScheduleOptions.fulfilled, (state, action) => {
         state.loading = false;
-        state.schedules = action.payload || [];
+        state.schedules = action.payload.schedules || [];
         state.scheduleOptions = {
-          subjects: action.payload?.subjects || [],
-          classes: action.payload?.classes || [],
-          sections: action.payload?.sections || [],
-          periods: action.payload?.periods || [],
+          subjects: action.payload.schedules?.subjects || [],
+          classes: action.payload.schedules?.classes || [],
+          sections: action.payload.schedules?.sections || [],
+          periods: action.payload.schedules?.periods || [],
+          teachers: action.payload.schedules?.teachers || []
         };
       })
       .addCase(fetchScheduleOptions.rejected, (state, action) => {

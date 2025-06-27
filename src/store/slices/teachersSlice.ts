@@ -49,8 +49,6 @@ export const fetchTeacherById = createAsyncThunk(
       return response;
     } catch (error: any) {
       const message = error?.response?.data?.message;
-      console.log("xxxxxxxxxxxxxxxxxxxxx",message);
-
       return rejectWithValue(message);
     }
   }

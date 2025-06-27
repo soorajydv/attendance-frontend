@@ -135,6 +135,7 @@ export interface AuthState {
 export interface Section extends BaseEntity{
   name: string;
   classId: string | Class; // String if just an ID, or full `Class` object if populated
+  class?:any
 }
 
 export interface DropdownOption {
@@ -196,4 +197,118 @@ export interface ScheduleOptions {
   classes: Array<{ _id: string; name: string }>;
   sections: Array<{ _id: string; name: string; classId: string }>;
   periods: Array<{ _id: string; name: string; startTime: string; endTime: string }>;
+  teachers: Array<{ _id: string; name: string }>;
+}
+
+
+export interface Fee {
+  _id: string;
+  studentId: string;
+  student?: Student;
+  academicYear: string;
+  semester: string;
+  feeStructure: {
+    tuition: number;
+    lab: number;
+    library: number;
+    exam: number;
+    hostel?: number;
+    bus?: number;
+    miscellaneous?: number;
+  };
+  totalAmount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  dueDate: string;
+  status: 'paid' | 'pending' | 'overdue' | 'partially_paid';
+  fine?: number;
+  discount?: number;
+  installments?: Installment[];
+  organizationId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Installment {
+  _id: string;
+  amount: number;
+  dueDate: string;
+  status: 'paid' | 'pending' | 'overdue';
+  paidDate?: string;
+}
+
+export interface Payment {
+  _id: string;
+  feeId: string;
+  studentId: string;
+  student?: Student;
+  amount: number;
+  paymentMethod: 'cash' | 'card' | 'upi' | 'bank_transfer' | 'cheque';
+  paymentDate: string;
+  bankReferenceId?: string;
+  receipt?: string;
+  status: 'pending' | 'verified' | 'rejected';
+  verifiedBy?: string;
+  verificationDate?: string;
+  remarks?: string;
+  organizationId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Student {
+  _id: string;
+  fullName: string;
+  rollNumber: string;
+  email: string;
+  phoneNumber: string;
+  class: string;
+  section: string;
+  admissionDate: string;
+  organizationId: string;
+}
+
+export interface BillingDashboard {
+  totalCollection: {
+    today: number;
+    week: number;
+    month: number;
+    year: number;
+  };
+  categoryBreakdown: {
+    tuition: number;
+    lab: number;
+    library: number;
+    exam: number;
+    hostel: number;
+    bus: number;
+    miscellaneous: number;
+  };
+  paymentMethodBreakdown: {
+    cash: number;
+    card: number;
+    upi: number;
+    bank_transfer: number;
+    cheque: number;
+  };
+  duesSummary: {
+    totalDue: number;
+    overdueAmount: number;
+    studentsWithDues: number;
+    overdueStudents: number;
+  };
+  recentTransactions: Payment[];
+}
+
+export interface FeeReport {
+  studentId: string;
+  studentName: string;
+  rollNumber: string;
+  class: string;
+  section: string;
+  totalFees: number;
+  paidAmount: number;
+  remainingDue: number;
+  lastPaymentDate?: string;
+  status: string;
 }
